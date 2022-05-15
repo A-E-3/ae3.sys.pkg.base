@@ -8,5 +8,5 @@ Requires: \
 Provides: \
 	ae3.base \
 	source-process:compile-java \
-	source-process:ae3-package:package \
+	source-process:ae3-packages \
 
