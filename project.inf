@@ -1,8 +1,11 @@
 Type: ae3.Package
 Name: ae3.sys.pkg.base
 Info: Base SDK and tools
-Requires: ae3.api ae3.sdk
-Provides:	\
+Requires: \
+	ae3.api \
+	ae3.sdk \
+
+Provides: \
 	ae3.base \
 	source-process:compile-java \
 	source-process:ae3-package:package \
