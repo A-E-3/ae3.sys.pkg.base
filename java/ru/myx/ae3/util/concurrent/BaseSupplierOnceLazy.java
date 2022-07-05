@@ -15,77 +15,77 @@ import ru.myx.ae3.util.base.BaseSupplier;
  * @author myx
  * @param <T> */
 public class BaseSupplierOnceLazy<T extends BaseObject> extends BaseFunctionAbstract implements BaseSupplier<T>, ExecCallableBoth.NativeJ0 {
-	
+
 	/** Same as constructor
 	 *
 	 * @return */
 	public static <T extends BaseObject> BaseSupplierOnceLazy<T> createInstance() {
-		
+
 		return new BaseSupplierOnceLazy<>();
 	}
-	
+
 	/** Called to produce a value once with all other threads waiting. */
 	protected BaseFunction functionValueSource = null;
-	
+
 	/** Called after the value is ready and left synchronized context. */
 	protected BaseFunction functionChangeCallback = null;
-	
+
 	/** null value is initial and when error only! */
 	private T lastData = null;
-	
+
 	/** null value is initial only! */
 	private RuntimeException lastError = null;
-	
+
 	private boolean stateWait = false;
-	
+
 	/** context for running call-backs */
 	protected final ExecProcess ctx;
-	
+
 	/**
 	 *
 	 */
 	public BaseSupplierOnceLazy() {
-
+		
 		this.ctx = Exec.createProcess(Exec.currentProcess(), this.getClass().getSimpleName());
 	}
-	
+
 	@Override
 	public BaseObject callNJ0(final BaseObject instance) {
-		
+
 		return this.get();
 	}
-	
+
 	void checkFailed(final Throwable e) {
-		
+
 		synchronized (this) {
-			this.lastError = e instanceof RuntimeException
-				? (RuntimeException) e
+			this.lastError = e instanceof final RuntimeException runtimeException
+				? runtimeException
 				: new RuntimeException(e);
 			this.stateWait = false;
 			this.notifyAll();
 		}
 	}
-	
+
 	final void checkReRead() {
-		
+
 		final BaseObject initialData = this.lastData != null
 			? BaseObject.UNDEFINED
 			: this.lastData;
-		
+
 		@SuppressWarnings("unchecked")
 		final BaseObject replacementData = this.lastData = (T) this.functionValueSource.callNE1(//
 				this.ctx,
 				this,
 				initialData//
 		);
-
-		this.lastError = null;
 		
+		this.lastError = null;
+
 		synchronized (this) {
 			this.stateWait = false;
 			this.notifyAll();
 		}
-		
+
 		if (this.functionChangeCallback != null && initialData != replacementData) {
 			this.functionChangeCallback.callVE1(//
 					this.ctx,
@@ -94,24 +94,24 @@ public class BaseSupplierOnceLazy<T extends BaseObject> extends BaseFunctionAbst
 			);
 		}
 	}
-	
+
 	/** Current settings object
 	 *
 	 * @return */
 	@Override
 	public final T get() {
-		
+
 		T currentData = this.lastData;
 		if (currentData != null) {
 			return currentData;
 		}
-		
+
 		check : {
-			
+
 			if (this.lastError != null) {
 				throw this.lastError;
 			}
-			
+
 			synchronized (this) {
 				if (this.stateWait) {
 					for (;;) {
@@ -127,7 +127,7 @@ public class BaseSupplierOnceLazy<T extends BaseObject> extends BaseFunctionAbst
 						}
 					}
 				}
-				
+
 				currentData = this.lastData;
 				/** changed while was waiting for sync? */
 				if (currentData != null) {
@@ -137,17 +137,17 @@ public class BaseSupplierOnceLazy<T extends BaseObject> extends BaseFunctionAbst
 				if (this.lastError != null) {
 					break check;
 				}
-				
+
 				/** settings flag, the will be started after sync block */
 				this.stateWait = true;
 			}
-			
+
 			/** start task */
 			Act.launch(this.ctx, new Runnable() {
-				
+
 				@Override
 				public void run() {
-					
+
 					try {
 						BaseSupplierOnceLazy.this.checkReRead();
 					} catch (final Throwable e) {
@@ -156,7 +156,7 @@ public class BaseSupplierOnceLazy<T extends BaseObject> extends BaseFunctionAbst
 					}
 				}
 			});
-			
+
 			synchronized (this) {
 				if (this.stateWait) {
 					wait : for (;;) {
@@ -175,29 +175,29 @@ public class BaseSupplierOnceLazy<T extends BaseObject> extends BaseFunctionAbst
 				break check;
 			}
 		}
-		
+
 		if (this.lastError != null) {
 			throw this.lastError;
 		}
-		
+
 		/** return currently active map */
 		return currentData;
 	}
-	
+
 	/** @param function
 	 *            function(currentData, previousResult)
 	 * @return */
 	public BaseSupplierOnceLazy<T> setChangeCallback(final BaseFunction function) {
-		
+
 		this.functionChangeCallback = function;
 		return this;
 	}
-	
+
 	/** @param function
 	 *            function(currentData, previousResult)
 	 * @return */
 	public BaseSupplierOnceLazy<T> setValueSource(final BaseFunction function) {
-		
+
 		this.functionValueSource = function;
 		return this;
 	}

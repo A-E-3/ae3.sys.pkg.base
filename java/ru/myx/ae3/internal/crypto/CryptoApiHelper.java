@@ -16,7 +16,7 @@ import ru.myx.util.Base58;
 
 /** @author myx */
 public class CryptoApiHelper {
-
+	
 	/**
 	 *
 	 */
@@ -25,50 +25,50 @@ public class CryptoApiHelper {
 	 *
 	 */
 	public static final Class<SignatureECDSA> SignatureECDSA = SignatureECDSA.class;
-
+	
 	/** @return
 	 * @throws NoSuchAlgorithmException */
 	public static final MessageDigest createDigestMd5() throws NoSuchAlgorithmException {
-
+		
 		return MessageDigest.getInstance("MD5");
 	}
-
+	
 	/** @return
 	 * @throws NoSuchAlgorithmException */
 	public static final MessageDigest createDigestSha256() throws NoSuchAlgorithmException {
-
+		
 		return MessageDigest.getInstance("SHA-256");
 	}
-
+	
 	/** @return
 	 * @throws NoSuchAlgorithmException */
 	public static final MessageDigest createDigestWhirlpool() throws NoSuchAlgorithmException {
-
+		
 		return new WhirlpoolDigest();
 		// return MessageDigest.getInstance("Whirlpool");
 	}
-
+	
 	/** @param text
 	 * @param privateKeyObject
 	 * @return
 	 * @throws GeneralSecurityException */
 	public static final String signStringUtfSha256WithEcdsaAsBase58(final String text, final Object privateKeyObject) throws GeneralSecurityException {
-
+		
 		final PrivateKey privateKey;
-		if (privateKeyObject instanceof TransferCopier) {
-			privateKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePrivateKeyFromBytesPKCS8(((TransferCopier) privateKeyObject).nextDirectArray());
+		if (privateKeyObject instanceof final TransferCopier keyBinary) {
+			privateKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePrivateKeyFromBytesPKCS8(keyBinary.nextDirectArray());
 		} else //
-		if (privateKeyObject instanceof byte[]) {
-			privateKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePrivateKeyFromBytesPKCS8((byte[]) privateKeyObject);
+		if (privateKeyObject instanceof final byte[] keyBytes) {
+			privateKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePrivateKeyFromBytesPKCS8(keyBytes);
 		} else {
 			throw new GeneralSecurityException("Unsupported privateKeyObject format!");
 		}
-
+		
 		final Signature signature = ru.myx.crypto.SignatureECDSA.prepareSignSHA256withECDSA(privateKey);
 		signature.update(text.getBytes(StandardCharsets.UTF_8));
 		return Base58.encode(signature.sign());
 	}
-
+	
 	/** @param text
 	 * @param publicKeyObject
 	 *            (base58)
@@ -77,7 +77,7 @@ public class CryptoApiHelper {
 	 * @throws GeneralSecurityException */
 	public static final boolean verifyStringUtfSha256WithEcdsaAsBase58(final String text, final Object publicKeyObject, final String signatureBase58)
 			throws GeneralSecurityException {
-
+		
 		final PublicKey publicKey;
 		if (publicKeyObject instanceof CharSequence) {
 			final String publicKeyString = publicKeyObject.toString();
@@ -87,15 +87,15 @@ public class CryptoApiHelper {
 				publicKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePublicKeyFromBytesCompressed(Base58.decode(publicKeyString));
 			}
 		} else //
-		if (publicKeyObject instanceof TransferCopier) {
-			publicKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePublicKeyFromBytesCompressed(((TransferCopier) publicKeyObject).nextDirectArray());
+		if (publicKeyObject instanceof final TransferCopier keyBinary) {
+			publicKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePublicKeyFromBytesCompressed(keyBinary.nextDirectArray());
 		} else //
-		if (publicKeyObject instanceof byte[]) {
-			publicKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePublicKeyFromBytesCompressed((byte[]) publicKeyObject);
+		if (publicKeyObject instanceof final byte[] keyBytes) {
+			publicKey = ru.myx.crypto.EllipticCurveSecp256r1.parsePublicKeyFromBytesCompressed(keyBytes);
 		} else {
 			throw new GeneralSecurityException("Unsupported publicKeyObject format!");
 		}
-
+		
 		final Signature signature = ru.myx.crypto.SignatureECDSA.prepareVerifySHA256withECDSA(publicKey);
 		signature.update(text.getBytes(StandardCharsets.UTF_8));
 		return signature.verify(Base58.decode(signatureBase58));
