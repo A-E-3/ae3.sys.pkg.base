@@ -49,7 +49,7 @@ Object.defineProperties(CacheObject.prototype, {
 			});
 			Object.defineProperties(this, {
 				"TTL" : {
-					value : this.creator && this.creator.TTL || this.TTL || 15000,
+					value : createCallback?.TTL || this.TTL || 15000,
 					writable : true
 				}
 			});
