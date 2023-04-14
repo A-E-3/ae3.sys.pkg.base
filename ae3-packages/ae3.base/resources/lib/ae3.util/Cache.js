@@ -90,18 +90,27 @@ Object.defineProperties(CacheObject.prototype, {
 		 * @returns
 		 */
 		value : function(key, creationAttachment, creationKey, creatorCallback) {
-			if(!key){
+			if (!key) {
 				throw "'key' is required!";
 			}
 			if (!creatorCallback) {
-				creatorCallback = this.creator;
-				if (!creatorCallback) {
-					throw new Error("'callback' is required or must be set during constructor call!");
+				/** assignment in condition **/
+				if (! (creatorCallback = this.creator) ) {
+					throw new Error("'callback' is required or must be set during initialization of the cache object!");
 				}
-			}else{
-				creatorCallback = Cache.createBaseFactory(creatorCallback, this);
+				return this.cache.getCreate(
+					key, 
+					creationAttachment, 
+					creationKey ?? key, 
+					creatorCallback
+				);
 			}
-			return this.cache.getCreate(key, creationAttachment, creationKey || key, creatorCallback);
+			return this.cache.getCreate(
+				key, 
+				creationAttachment, 
+				creationKey ?? key, 
+				Cache.createBaseFactory(creatorCallback, this)
+			);
 		}
 	},
 	"put" : {
