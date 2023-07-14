@@ -23,9 +23,6 @@ const CacheType = require('java.class/ru.myx.ae3.cache.CacheType').SMALL_JAVA_SO
  */
 function CacheObject(key, createCallback, validateCallback) {
 	if (createCallback) {
-		if ('function' !== typeof createCallback) {
-			throw new TypeError("'createCallback' must be either function, either evaluate to 'false'");
-		}
 		this.setFactory(createCallback);
 	}
 	Object.defineProperty(this, "cache", {
