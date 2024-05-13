@@ -4,8 +4,8 @@ import java.text.FieldPosition;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
-import ru.myx.ae3.Engine;
 import ru.myx.ae3.base.Base;
 import ru.myx.ae3.base.BaseDate;
 import ru.myx.ae3.base.BaseObject;
@@ -20,92 +20,94 @@ import ru.myx.ae3.vfs.Entry;
 /** @author myx */
 @ReflectionManual
 public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDate> {
-
+	
 	private static final class DontCareFieldPosition extends FieldPosition {
-
+		
 		// The singleton of DontCareFieldPosition.
 		static final FieldPosition INSTANCE = new DontCareFieldPosition();
-
+		
 		private DontCareFieldPosition() {
-
+			
 			super(0);
 		}
 	}
-
+	
+	private static final TimeZone TIMEZONE_GMT = TimeZone.getTimeZone("GMT");
+	
 	private static final char[] DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-
+	
 	/** FIXME - should somehow (through explicit reflection annotation) use prototype from parent
 	 * class */
 	static final BaseObject PROTOTYPE = Reflect.classToBasePrototype(EventIdentifier.class);
-
+	
 	/**
 	 *
 	 */
 	@ReflectionExplicit
 	public static final String KEY_HIGHEST //
 			= "zzzzzzzzzzzzz-zz";
-
+	
 	/**
 	 *
 	 */
 	@ReflectionExplicit
 	public static final String KEY_HIGHEST_2015 //
 			= "99999999T999999999Z-ZZZZZZzzz";
-
+	
 	/**
 	 *
 	 */
 	@ReflectionExplicit
 	public static final String KEY_LOWEST //
 			= "00000000z0000-00";
-
+	
 	/**
 	 *
 	 */
 	@ReflectionExplicit
 	public static final String KEY_LOWEST_2015 //
 			= "00000000T000000000Z-000000---";
-
+	
 	/**
 	 *
 	 */
 	public static final int MAX_SEQUENCE //
 			= 46000;
-
+	
 	/**
 	 *
 	 */
 	public static final short MAX_ORIGIN //
 			= 1295;
-
+	
 	private static long lastDateMillis = -1;
-
+	
 	private static short lastSequence = -1;
-
+	
 	/** @param a
 	 * @param b
 	 * @return */
 	@ReflectionExplicit
 	public static final int compareEntryKeysDateAsc(final Entry a, final Entry b) {
-
+		
 		return EventIdentifier.compareKeysDateAsc(a.getKey(), b.getKey());
 	}
-
+	
 	/** @param a
 	 * @param b
 	 * @return */
 	@ReflectionExplicit
 	public static final int compareEntryKeysDateDesc(final Entry a, final Entry b) {
-
+		
 		return EventIdentifier.compareKeysDateDesc(a.getKey(), b.getKey());
 	}
-
+	
 	/** @param a
 	 * @param b
 	 * @return */
 	@ReflectionExplicit
 	public static final int compareKeysDateAsc(final String a, final String b) {
-		
+
 		final int la = a.length();
 		final int lb = b.length();
 		if (la == lb) {
@@ -119,13 +121,13 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				? 1
 				: 0;
 	}
-
+	
 	/** @param a
 	 * @param b
 	 * @return */
 	@ReflectionExplicit
 	public static final int compareKeysDateDesc(final String a, final String b) {
-		
+
 		final int la = a.length();
 		final int lb = b.length();
 		if (la == lb) {
@@ -139,59 +141,59 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				? 1
 				: 0;
 	}
-
+	
 	/** @param dateMillis
 	 * @param sequence
 	 * @param origin
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier exact(final long dateMillis, final short sequence, final short origin) {
-
+		
 		return new EventIdentifier(dateMillis, sequence, origin);
 	}
-
+	
 	/** @param date
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier keyHighest(final Date date) {
-
+		
 		return new EventIdentifier(date.getTime(), EventIdentifier.MAX_SEQUENCE, EventIdentifier.MAX_ORIGIN);
 	}
 	/** @param date
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier keyLowest(final Date date) {
-
+		
 		return new EventIdentifier(date.getTime(), 0, (short) -1);
 	}
-
+	
 	/** @param date
 	 * @param backwards
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier keyStart(final Date date, final boolean backwards) {
-
+		
 		return backwards
 			? EventIdentifier.keyHighest(date)
 			: EventIdentifier.keyLowest(date);
 	}
-
+	
 	/** Exactly at the moment of posting to message bus!
 	 *
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier next() {
-
+		
 		return EventIdentifier.next((short) -1);
 	}
-
+	
 	/** Exactly at the moment of posting to message bus!
 	 *
 	 * @param origin
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier next(final short origin) {
-
+		
 		final long dateMillis = System.currentTimeMillis();
 		final short sequence;
 		synchronized (EventIdentifier.class) {
@@ -204,14 +206,14 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 		}
 		return new EventIdentifier(dateMillis, sequence, origin);
 	}
-
+	
 	/** @param k
 	 * @return */
 	@ReflectionExplicit
 	public static final EventIdentifier parseKeyString(final String k) {
-
+		
 		final int length = k.length();
-
+		
 		try {
 			// "20140729T110014954Z-000000---".length === 29
 			if ((length == 29 || length > 29 && k.charAt(29) == ';') && k.charAt(19) == '-') {
@@ -234,23 +236,23 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 						Short.parseShort(k.substring(25, 32)),
 						(short) 0);
 			}
-
+			
 			return null;
 		} catch (final ParseException e) {
 			return null;
 		}
 	}
-
+	
 	/** @param k
 	 * @return */
 	@ReflectionExplicit
 	public static final long parseKeyStringMillis(final String k) {
-
+		
 		return EventIdentifier.parseKeyStringMillis(k, k.length());
 	}
-
+	
 	private static final long parseKeyStringMillis(final String k, final int length) {
-
+		
 		try {
 			// "20140729T110014954Z-000000---".length === 29
 			if ((length == 29 || length > 29 && k.charAt(29) == ';') && k.charAt(19) == '-') {
@@ -264,33 +266,33 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 			if (length == 32 && k.charAt(24) == ';') {
 				return Base.toDateMillis(k.substring(0, 24));
 			}
-
+			
 			return 0;
 		} catch (final ParseException e) {
 			return 0;
 		}
 	}
-
-	/**
-	 *
-	 */
-	@ReflectionExplicit
-	public final BaseDate date;
 	
 	/**
 	 *
 	 */
 	@ReflectionExplicit
-	public final short origin;
+	public final BaseDate date;
 
 	/**
 	 *
 	 */
 	@ReflectionExplicit
+	public final short origin;
+	
+	/**
+	 *
+	 */
+	@ReflectionExplicit
 	private final int sequence;
-
+	
 	private EventIdentifier(final long dateMillis, final int sequence, final short origin) {
-
+		
 		if (sequence < 0) {
 			throw new IllegalArgumentException("sequence must be >= 0");
 		}
@@ -309,31 +311,31 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 		this.sequence = sequence;
 		this.origin = origin;
 	}
-
+	
 	@Override
 	public String baseClass() {
-
+		
 		return "EventIdentity";
 	}
-
+	
 	@Override
 	public BaseObject basePrototype() {
-
+		
 		return EventIdentifier.PROTOTYPE;
 	}
-
+	
 	@Override
 	public BaseDate baseValue() throws WaitTimeoutException {
-
+		
 		return this.date;
 	}
-
+	
 	/** @return */
 	@ReflectionExplicit
 	public String getKeyString() {
-
+		
 		final StringBuilder builder = new StringBuilder();
-
+		
 		{
 			final long dateMillis = this.date.getTime();
 			final int length = dateMillis == 0
@@ -347,9 +349,9 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				builder.append(EventIdentifier.DIGITS[(int) (dateMillis / Math.pow(36, i) % 36)]);
 			}
 		}
-
+		
 		builder.append('z');
-
+		
 		{
 			final int sequence = this.sequence;
 			if (sequence == 0) {
@@ -369,9 +371,9 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				}
 			}
 		}
-
+		
 		builder.append('-');
-
+		
 		{
 			final short origin = this.origin;
 			if (origin == -1) {
@@ -390,25 +392,25 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				}
 			}
 		}
-
+		
 		return builder.toString();
 	}
-
+	
 	/** @return */
 	@ReflectionExplicit
 	public String getKeyString2015() {
-
+		
 		final SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd'T'HHmmssSSS'Z'");
-		formatter.setTimeZone(Engine.TIMEZONE_GMT);
-
+		formatter.setTimeZone(EventIdentifier.TIMEZONE_GMT);
+		
 		final StringBuffer builder = new StringBuffer();
-
+		
 		{
 			formatter.format(this.date, builder, DontCareFieldPosition.INSTANCE);
-
+			
 			builder.append('-');
 		}
-
+		
 		{
 			final int sequence = this.sequence;
 			final int length = sequence == 0
@@ -421,10 +423,10 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				builder.append(EventIdentifier.DIGITS[(int) (sequence / Math.pow(10, i) % 10)]);
 			}
 		}
-
+		
 		{
 			final short origin = this.origin;
-
+			
 			if (origin == -1) {
 				builder.append('-');
 				builder.append('-');
@@ -442,30 +444,30 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 				}
 			}
 		}
-
+		
 		return builder.toString();
 	}
-
+	
 	/** @return */
 	@ReflectionExplicit
 	public final long getTime() {
-
+		
 		return this.date.getTime();
 	}
-
+	
 	/** @return */
 	@ReflectionExplicit
 	public final EventIdentifier nextSequentialIdentifier() {
-
+		
 		if (this.sequence < EventIdentifier.MAX_SEQUENCE) {
 			return new EventIdentifier(this.date.getTime(), this.sequence + 1, this.origin);
 		}
 		return new EventIdentifier(this.date.getTime() + 1L, 0, (short) -1);
 	}
-
+	
 	@Override
 	public String toString() {
-
+		
 		return "[event " + this.getKeyString2015() + "]";
 	}
 }
