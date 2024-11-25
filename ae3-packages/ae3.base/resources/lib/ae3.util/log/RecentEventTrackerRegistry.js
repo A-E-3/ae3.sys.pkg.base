@@ -72,9 +72,13 @@ const RecentEventTrackerRegistry = module.exports = ae3.Class.create(
 				if(!folder.isContainer()){
 					return [];
 				}
+
 				const result = [];
+				const entries = folder.getContentCollection(null);
+				entries.sort(vfs.SORTER_KEY_DESC);
+
 				var entry, key, pos1, type;
-				for(entry of folder.getContentCollection(null).sort(vfs.SORTER_KEY_DESC)){
+				for(entry of entries){
 					key = entry.key;
 					pos1 = key.lastIndexOf(';');
 					if(pos1 === -1){

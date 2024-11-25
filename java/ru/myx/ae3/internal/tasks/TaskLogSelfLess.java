@@ -39,7 +39,7 @@ class TaskLogSelfLess extends TaskLogSelfNone {
 		synchronized (this.list) {
 			this.list.baseDefaultPush(event);
 		}
-		AbstractSAPI.logDebug("Task: " + event);
+		AbstractSAPI.logDebug("TaskLog::Less: " + event);
 	}
 
 	@Override
@@ -56,7 +56,7 @@ class TaskLogSelfLess extends TaskLogSelfNone {
 		synchronized (this.list) {
 			this.list.baseDefaultPush(event);
 		}
-		AbstractSAPI.logDebug("Task: " + event);
+		AbstractSAPI.logDebug("TaskLog::Less: " + event);
 	}
 
 	@Override
@@ -72,7 +72,7 @@ class TaskLogSelfLess extends TaskLogSelfNone {
 		synchronized (this.list) {
 			this.list.baseDefaultPush(event);
 		}
-		AbstractSAPI.logDebug("Task: " + event);
+		AbstractSAPI.logDebug("TaskLog::Less: " + event);
 	}
 
 }

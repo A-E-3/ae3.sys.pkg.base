@@ -19,7 +19,16 @@ import ru.myx.ae3.reflect.ReflectionManual;
 /** @author myx */
 @ReflectionManual
 public final class ClassApiHelper {
-	
+
+	private static final BaseFunction FN_RETURN_STRING_CLASS;
+	static {
+		try {
+			FN_RETURN_STRING_CLASS = Base.createFunction("return \"[class ?]\";");
+		} catch (final Exception e) {
+			throw new java.lang.UnsupportedOperationException("Expected to compile successfully", e);
+		}
+	}
+
 	/** @param name
 	 * @param inherit
 	 * @param constructor
@@ -30,7 +39,7 @@ public final class ClassApiHelper {
 	@ReflectionExplicit
 	public static BaseObject createClass(final CharSequence name, final BaseObject inherit, final BaseFunction constructor, final BaseObject properties, final BaseObject statics)
 			throws Exception {
-		
+
 		final BaseObject prototype;
 		{
 			if (inherit == BaseObject.UNDEFINED || inherit == null) {
@@ -40,7 +49,8 @@ public final class ClassApiHelper {
 				prototype = BaseObject.createObject(
 						inheritPrototype == BaseObject.UNDEFINED || inheritPrototype.baseIsPrimitive()
 							? inherit
-							: inheritPrototype);
+							: inheritPrototype//
+				);
 			}
 		}
 		constructor.baseDefine("prototype", prototype);
@@ -48,13 +58,13 @@ public final class ClassApiHelper {
 			for (final Iterator<? extends BasePrimitive<?>> i = properties.baseKeysOwnPrimitive(); i.hasNext();) {
 				final BasePrimitiveString k = i.next().baseToString();
 				BaseObject d = properties.baseGet(k, BaseObject.UNDEFINED);
-				
+
 				if (d == BaseObject.UNDEFINED) {
 					// console.warn("createClass: " + name + ", propertyKey: " + key + " has invalid
 					// descriptor: " + Format.jsDescribe(d));
 					continue;
 				}
-				
+
 				final String execute = d.baseGet("execute", BaseString.EMPTY).baseToJavaString();
 				if ("once".equals(execute)) {
 					final BaseFunction getter = d.baseGet("get", BaseObject.UNDEFINED).baseCall();
@@ -76,19 +86,20 @@ public final class ClassApiHelper {
 			prototype.baseDefine(
 					name, //
 					constructor, //
-					BaseProperty.ATTRS_MASK_NNN);
+					BaseProperty.ATTRS_MASK_NNN//
+			);
 		}
 		if (statics instanceof BaseMap) {
 			for (final Iterator<? extends BasePrimitive<?>> i = statics.baseKeysOwnPrimitive(); i.hasNext();) {
 				final BasePrimitiveString k = i.next().baseToString();
 				BaseObject d = statics.baseGet(k, BaseObject.UNDEFINED);
-				
+
 				if (d == BaseObject.UNDEFINED) {
 					// console.warn("createClass: " + name + ", propertyKey: " + key + " has invalid
 					// descriptor: " + Format.jsDescribe(d));
 					continue;
 				}
-				
+
 				final String execute = d.baseGet("execute", BaseString.EMPTY).baseToJavaString();
 				if ("once".equals(execute)) {
 					final BaseFunction getter = d.baseGet("get", BaseObject.UNDEFINED).baseCall();
@@ -109,13 +120,23 @@ public final class ClassApiHelper {
 			}
 			// BaseNative.defineProperties(constructor, statics);
 		}
-		if (name != null && !(statics instanceof BaseMap && statics.baseGetOwnProperty("toString") != null)) {
+		if (name != null) {
+			constructor.baseDefine(
+					"name", //
+					Base.forString(name), //
+					BaseProperty.ATTRS_MASK_NNN//
+			);
+		}
+		if (!(statics instanceof BaseMap && statics.baseGetOwnProperty("toString") != null)) {
 			constructor.baseDefine(
 					"toString", //
-					Base.createFunction("return \"[class " + name + "]\";"), //
-					BaseProperty.ATTRS_MASK_NNN);
+					name == null //
+						? ClassApiHelper.FN_RETURN_STRING_CLASS
+						: Base.createFunction("return \"[class " + name + "]\";"), //
+					BaseProperty.ATTRS_MASK_NNN//
+			);
 		}
 		return constructor;
 	}
-	
+
 }

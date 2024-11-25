@@ -380,7 +380,7 @@ const RecentEventTracker = module.exports = ae3.Class.create(
 				if(!folder.isContainer()){
 					return [];
 				}
-				return folder.getContentsCollection(null).map(internMapRecent, this);
+				return folder.getContentsCollection(null)?.map(internMapRecent, this);
 			} 
 		},
 		"getActivityEvent" : { 

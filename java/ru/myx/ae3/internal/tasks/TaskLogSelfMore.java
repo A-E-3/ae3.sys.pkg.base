@@ -26,7 +26,7 @@ class TaskLogSelfMore extends TaskLogSelfNorm {
 				detail);
 		/** only to console: */
 		// this.list.baseDefaultPush(event);
-		AbstractSAPI.logDebug("Task: " + event);
+		AbstractSAPI.logDebug("TaskLog::More: " + event);
 	}
 
 	@Override
@@ -42,7 +42,7 @@ class TaskLogSelfMore extends TaskLogSelfNorm {
 		synchronized (this.list) {
 			this.list.baseDefaultPush(event);
 		}
-		AbstractSAPI.logDebug("Task: " + event);
+		AbstractSAPI.logDebug("TaskLog::More: " + event);
 	}
 
 }
