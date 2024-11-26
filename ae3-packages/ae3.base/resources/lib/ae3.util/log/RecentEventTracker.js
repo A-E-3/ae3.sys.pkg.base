@@ -370,7 +370,7 @@ const RecentEventTracker = module.exports = ae3.Class.create(
 			} 
 		},
 		"getRelatedEvents" : { 
-			value : function(eventTypeNames, relatedObject){
+			value : function(relatedObject, eventTypeNames, limie){
 				if(!relatedObject || !relatedObject.vfs || !relatedObject.vfs.isContainer){
 					throw new Error("Invalid relatedObject: " + Format.jsDescribe(relatedObject));
 				}

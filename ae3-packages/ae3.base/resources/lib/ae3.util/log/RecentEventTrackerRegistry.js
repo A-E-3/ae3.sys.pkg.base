@@ -58,7 +58,7 @@ const RecentEventTrackerRegistry = module.exports = ae3.Class.create(
 			}
 		},
 		"getRelatedEvents" : {
-			value : function(relatedObject, eventTypeNames){
+			value : function(relatedObject, eventTypeNames, limit){
 				const folder = relatedObject[".recent"] ?? (function(/* locals: */ folder){
 					folder = this.vfs.relativeFolder("recent");
 					Object.defineProperty(this, ".recent", {
@@ -74,8 +74,9 @@ const RecentEventTrackerRegistry = module.exports = ae3.Class.create(
 				}
 
 				const result = [];
-				const entries = folder.getContentCollection(null);
-				entries.sort(vfs.SORTER_KEY_DESC);
+				const entries = folder.getContentRange(null, null, limit ?? 100, true, null);
+				// const entries = folder.getContentCollection(null);
+				// entries.sort(vfs.SORTER_KEY_DESC);
 
 				var entry, key, pos1, type;
 				for(entry of entries){
