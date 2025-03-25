@@ -356,8 +356,7 @@ const AuthVfs = module.exports = ae3.Class.create(
 		
 		"checkMembership" : { 
 			value : function authCheckMembership(username, groupname) {
-				var vfsMembership = this.vfsAccounts.relative(username + "/membership/" + groupname, null);
-				return vfsMembership?.isExist() || false;
+				return this.vfsAccounts.relative(username + "/membership/" + groupname, null)?.isExist() ?? false;
 			}
 		},
 		"addMembership" : { 
