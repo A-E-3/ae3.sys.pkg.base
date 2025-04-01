@@ -24,7 +24,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 		
 		{
 			final BaseObject taskLog = instance.baseGet("taskLog", BaseObject.NULL);
-			if (BaseObject.NULL != taskLog && taskLog instanceof TaskLog) {
+			if (taskLog instanceof TaskLog) {
 				return (TaskLog) taskLog;
 			}
 		}
@@ -33,7 +33,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 			final String loggingDetail = instance.baseGet("log", BaseString.EMPTY).baseToJavaString();
 			final TaskLog byDetail = TaskLog.checkCreateByLoggingDetail(instance, loggingDetail);
 			if (byDetail != null) {
-				instance.baseDefine("taskLog", byDetail);
+				instance.baseDefine("taskLog", byDetail /* , BaseProperty.ATTRS_MASK_WND */ );
 				return byDetail;
 			}
 		}
@@ -41,7 +41,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 		final BaseObject parent = instance.baseGet("parent", BaseObject.UNDEFINED);
 		if (BaseObject.UNDEFINED == parent) {
 			final TaskLog normal = new TaskLogSelfNorm(instance);
-			instance.baseDefine("taskLog", normal);
+			instance.baseDefine("taskLog", normal /* , BaseProperty.ATTRS_MASK_WND */ );
 			return normal;
 		}
 		
@@ -49,7 +49,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 			final String loggingDetail = parent.baseGet("childrenLog", BaseString.EMPTY).baseToJavaString();
 			final TaskLog byDetail = TaskLog.checkCreateByLoggingDetail(instance, loggingDetail);
 			if (byDetail != null) {
-				instance.baseDefine("taskLog", byDetail);
+				instance.baseDefine("taskLog", byDetail /* , BaseProperty.ATTRS_MASK_WND */ );
 				return byDetail;
 			}
 		}
@@ -57,14 +57,14 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 		{
 			final BaseObject parentLogger = parent.baseGet("taskLogger", BaseObject.UNDEFINED);
 			if (parentLogger instanceof TaskLog) {
-				instance.baseDefine("taskLog", parentLogger);
+				instance.baseDefine("taskLog", parentLogger /* , BaseProperty.ATTRS_MASK_WND */ );
 				return (TaskLog) parentLogger;
 			}
 		}
-
+		
 		{
 			final TaskLog normal = new TaskLogSelfNorm(instance);
-			instance.baseDefine("taskLog", normal);
+			instance.baseDefine("taskLog", normal /* , BaseProperty.ATTRS_MASK_WND */ );
 			return normal;
 		}
 	}
@@ -118,8 +118,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 	 * @param type
 	 * @param variant
 	 * @param peer
-	 * @param detail
-	 */
+	 * @param detail */
 	void logAlert(BaseObject origin, BaseObject type, BaseObject variant, BaseObject peer, BaseObject detail);
 	
 	/** 'debug', hl="disabled"
@@ -128,8 +127,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 	 * @param type
 	 * @param variant
 	 * @param peer
-	 * @param detail
-	 */
+	 * @param detail */
 	void logDebug(BaseObject origin, BaseObject type, BaseObject variant, BaseObject peer, BaseObject detail);
 	
 	/** 'detail', hl="local"
@@ -138,8 +136,7 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 	 * @param type
 	 * @param variant
 	 * @param peer
-	 * @param detail
-	 */
+	 * @param detail */
 	void logDetail(BaseObject origin, BaseObject type, BaseObject variant, BaseObject peer, BaseObject detail);
 	
 	/** 'error', hl="error"
@@ -148,15 +145,13 @@ public interface TaskLog extends BaseHost, BaseObjectNoOwnProperties {
 	 * @param type
 	 * @param variant
 	 * @param peer
-	 * @param detail
-	 */
+	 * @param detail */
 	void logError(BaseObject origin, BaseObject type, BaseObject variant, BaseObject peer, BaseObject detail);
 	
 	/** @param origin
 	 * @param type
 	 * @param variant
 	 * @param peer
-	 * @param detail
-	 */
+	 * @param detail */
 	void logEvent(BaseObject origin, BaseObject type, BaseObject variant, BaseObject peer, BaseObject detail);
 }
