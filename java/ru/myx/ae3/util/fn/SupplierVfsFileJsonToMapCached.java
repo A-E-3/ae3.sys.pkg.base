@@ -11,42 +11,43 @@ public class SupplierVfsFileJsonToMapCached extends SupplierVfsFileAbstractTextP
 	/**
 	 *
 	 */
-	protected BaseObject settingsDefaults = null;
+	protected BaseObject inputDefaults = null;
 	/** @param file */
 	public SupplierVfsFileJsonToMapCached(final Entry file) {
+
 		super(file);
+	}
+
+	/** @param inputDefaults
+	 * @return */
+	public SupplierTextInputAbstractTextCached setDefaults(final BaseObject inputDefaults) {
+
+		this.inputDefaults = inputDefaults;
+		return this;
 	}
 
 	@Override
 	protected BaseObject parseText(final CharSequence source) {
 
 		if (source == null || source.length() == 0) {
-			return this.settingsDefaults == null
+			return this.inputDefaults == null
 				? BaseObject.UNDEFINED
-				: BaseObject.createObject(this.settingsDefaults);
+				: BaseObject.createObject(this.inputDefaults);
 		}
 
 		try {
 			final BaseObject parsed = JsonSAPI.parse(Exec.currentProcess(), String.valueOf(source));
 
-			if (this.settingsDefaults == null) {
+			if (this.inputDefaults == null) {
 				return parsed;
 			}
 
-			final BaseObject result = BaseObject.createObject(this.settingsDefaults);
+			final BaseObject result = BaseObject.createObject(this.inputDefaults);
 			result.baseDefineImportOwnEnumerable(parsed);
 			return result;
 
 		} catch (final Exception e) {
 			throw new RuntimeException("Invalid JSON: " + this.file, e);
 		}
-	}
-
-	/** @param defaults
-	 * @return */
-	public SupplierTextInputAbstractTextCached setDefaults(final BaseObject defaults) {
-
-		this.settingsDefaults = defaults;
-		return this;
 	}
 }

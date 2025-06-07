@@ -31,11 +31,49 @@ public class SupplierVfsFolderSettingsCached extends SupplierVfsFolderMapCached 
 	/**
 	 *
 	 */
-	protected BaseObject settingsDefaults = null;
+	protected BaseObject inputDefaults = null;
 
 	SupplierVfsFolderSettingsCached(final Entry folder) {
 
 		super(folder);
+	}
+
+	/** @param inputDefaults
+	 * @return */
+	public SupplierVfsFolderSettingsCached setDefaults(final BaseObject inputDefaults) {
+
+		this.inputDefaults = inputDefaults;
+		return this;
+	}
+
+	/** Sets result object reducer
+	 *
+	 * @param function
+	 * @return */
+	public SupplierVfsFolderSettingsCached setDescriptorFilter(final BaseFunction function) {
+
+		this.descriptorFilter = function;
+		return this;
+	}
+
+	/** Sets result object reducer
+	 *
+	 * @param function
+	 * @return */
+	public SupplierVfsFolderSettingsCached setDescriptorMapper(final BaseFunction function) {
+
+		this.descriptorMapper = function;
+		return this;
+	}
+
+	/** Sets result object reducer
+	 *
+	 * @param function
+	 * @return */
+	public SupplierVfsFolderSettingsCached setDescriptorReducer(final BaseFunction function) {
+
+		this.descriptorReducer = function;
+		return this;
 	}
 
 	@Override
@@ -98,12 +136,12 @@ public class SupplierVfsFolderSettingsCached extends SupplierVfsFolderMapCached 
 					}
 					return null;
 				}
-				if (this.settingsDefaults == null) {
+				if (this.inputDefaults == null) {
 					descriptor = parsed;
 					break describe;
 				}
 
-				descriptor = BaseObject.createObject(this.settingsDefaults);
+				descriptor = BaseObject.createObject(this.inputDefaults);
 				descriptor.baseDefineImportOwnEnumerable(parsed);
 				break describe;
 			}
@@ -149,43 +187,5 @@ public class SupplierVfsFolderSettingsCached extends SupplierVfsFolderMapCached 
 	protected BaseObject runFolderMapper(final String name, final Entry entry) {
 
 		return null;
-	}
-
-	/** @param defaults
-	 * @return */
-	public SupplierVfsFolderSettingsCached setDefaults(final BaseObject defaults) {
-
-		this.settingsDefaults = defaults;
-		return this;
-	}
-
-	/** Sets result object reducer
-	 *
-	 * @param function
-	 * @return */
-	public SupplierVfsFolderSettingsCached setDescriptorFilter(final BaseFunction function) {
-
-		this.descriptorFilter = function;
-		return this;
-	}
-
-	/** Sets result object reducer
-	 *
-	 * @param function
-	 * @return */
-	public SupplierVfsFolderSettingsCached setDescriptorMapper(final BaseFunction function) {
-
-		this.descriptorMapper = function;
-		return this;
-	}
-
-	/** Sets result object reducer
-	 *
-	 * @param function
-	 * @return */
-	public SupplierVfsFolderSettingsCached setDescriptorReducer(final BaseFunction function) {
-
-		this.descriptorReducer = function;
-		return this;
 	}
 }

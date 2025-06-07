@@ -135,13 +135,13 @@ public class MapQueueBuilder implements BaseSupplier<BaseObject> {
 		return this;
 	}
 	
-	/** @param defaults
+	/** @param inputDefaults
 	 * @return */
-	public MapQueueBuilder setDefaults(final BaseObject defaults) {
+	public MapQueueBuilder setDefaults(final BaseObject inputDefaults) {
 		
-		this.defaults = defaults == null || defaults == BaseObject.UNDEFINED || defaults == BaseObject.NULL
+		this.defaults = inputDefaults == null || inputDefaults == BaseObject.UNDEFINED || inputDefaults == BaseObject.NULL
 			? null
-			: defaults;
+			: inputDefaults;
 		return this;
 	}
 	

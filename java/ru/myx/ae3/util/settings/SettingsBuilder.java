@@ -19,78 +19,36 @@ import ru.myx.ae3.vfs.union.StorageImplUnion;
 
 /** @author myx */
 public class SettingsBuilder implements BaseSupplier<BaseObject> {
-	
+
 	/** @return */
 	public static final SettingsBuilder builderCachedLazy() {
-		
+
 		return new SettingsBuilder().setCachedLazy();
 	}
 	/** @return */
 	public static final SettingsBuilder builderSimple() {
-		
+
 		return new SettingsBuilder();
 	}
 	Entry inputFile = null;
-	
+
 	Entry inputFolder = null;
-	
+
 	boolean wrapCached = false;
-	BaseObject defaults = null;
-	
+	BaseObject inputDefaults = null;
+
 	BaseFunction functionDescriptorFilter = null;
-	
+
 	BaseFunction functionDescriptorMapper = null;
-	
+
 	BaseFunction functionDescriptorReducer = null;
-	
+
 	BaseFunction functionResultMapper = null;
-	
+
 	BaseFunction functionChangeCallback = null;
-	
-	/** @return */
-	public BaseSupplier<?> build() {
-		
-		if (this.wrapCached) {
-			return new BaseSupplierCachedLazy<>()//
-					.setValueSource(this.parserForInput())//
-					.setChangeCallback(this.functionChangeCallback)//
-			;
-		}
-		
-		{
-			if (this.functionChangeCallback != null) {
-				throw new IllegalStateException("Change callback is allowed for cached responses (yet?)");
-			}
-			return this.parserForInput();
-		}
-		
-	}
-	
-	@Override
-	public BaseFunction buildGetter() {
-		
-		final BaseSupplier<?> getter = this.build();
-		if (getter instanceof BaseFunction) {
-			return (BaseFunction) getter;
-		}
-		return new BaseFunctionSupplierGetter(getter);
-	}
-	
-	@Override
-	@ReflectionHidden
-	public BaseProperty buildProperty(final short propertyAttributes) {
-		
-		return BaseSupplier.super.buildProperty(propertyAttributes);
-	}
-	
-	@Override
-	public BaseObject get() {
-		
-		return this.build().get();
-	}
-	
+
 	private final SupplierAbstractFunctionInterface parserForInput() {
-		
+
 		{
 			final Entry file = this.inputFile;
 			if (file != null) {
@@ -106,12 +64,12 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 				final String key = file.getKey().toLowerCase();
 				if (key.endsWith(".json")) {
 					return new SupplierVfsFileJsonToMapCached(file)//
-							.setDefaults(this.defaults)//
+							.setDefaults(this.inputDefaults)//
 							.setMapper(this.functionResultMapper);
 				}
 				if (key.endsWith(".xml")) {
 					return new SupplierVfsFileXmlToMapCached(file)//
-							.setDefaults(this.defaults)//
+							.setDefaults(this.inputDefaults)//
 							.setMapper(this.functionResultMapper);
 				}
 				throw new IllegalArgumentException("Unknown or unsupported file type, name: " + file.getKey());
@@ -121,7 +79,7 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 			final Entry folder = this.inputFolder;
 			if (folder != null) {
 				return new SupplierVfsFolderSettingsCached(folder)//
-						.setDefaults(this.defaults)//
+						.setDefaults(this.inputDefaults)//
 						.setDescriptorFilter(this.functionDescriptorFilter)//
 						.setDescriptorMapper(this.functionDescriptorMapper)//
 						.setDescriptorReducer(this.functionDescriptorReducer)//
@@ -133,61 +91,103 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 			throw new IllegalArgumentException("Unknown or unsupported input type");
 		}
 	}
-	
+
+	/** @return */
+	public BaseSupplier<?> build() {
+
+		if (this.wrapCached) {
+			return new BaseSupplierCachedLazy<>()//
+					.setValueSource(this.parserForInput())//
+					.setChangeCallback(this.functionChangeCallback)//
+			;
+		}
+
+		{
+			if (this.functionChangeCallback != null) {
+				throw new IllegalStateException("Change callback is allowed for cached responses (yet?)");
+			}
+			return this.parserForInput();
+		}
+
+	}
+
+	@Override
+	public BaseFunction buildGetter() {
+
+		final BaseSupplier<?> getter = this.build();
+		if (getter instanceof BaseFunction) {
+			return (BaseFunction) getter;
+		}
+		return new BaseFunctionSupplierGetter(getter);
+	}
+
+	@Override
+	@ReflectionHidden
+	public BaseProperty buildProperty(final short propertyAttributes) {
+
+		return BaseSupplier.super.buildProperty(propertyAttributes);
+	}
+
+	@Override
+	public BaseObject get() {
+
+		return this.build().get();
+	}
+
 	/** @return */
 	public SettingsBuilder setCachedLazy() {
-		
+
 		this.wrapCached = true;
 		return this;
 	}
-	
-	/** @param defaults
-	 *            - default prototype object to derive settings from
+
+	/** @param inputDefaults
+	 *            - default prototype object to derive initially parsed settings from.
 	 * @return */
-	public SettingsBuilder setDefaults(final BaseObject defaults) {
-		
-		this.defaults = defaults == null || defaults == BaseObject.UNDEFINED || defaults == BaseObject.NULL
+	public SettingsBuilder setDefaults(final BaseObject inputDefaults) {
+
+		this.inputDefaults = inputDefaults == null || inputDefaults == BaseObject.UNDEFINED || inputDefaults == BaseObject.NULL
 			? null
-			: defaults;
+			: inputDefaults;
 		return this;
 	}
-	
+
 	/** @param filter
 	 *            - function(name), return true or non-default record name
 	 * @return */
 	public SettingsBuilder setDescriptorFilter(final BaseFunction filter) {
-		
+
 		this.functionDescriptorFilter = filter;
 		return this;
 	}
-	
+
 	/** @param glob
 	 *            - string (without 'glob:' prefix), like: "*.{vendor,customer}.{json,xml}"
 	 * @return */
 	public SettingsBuilder setDescriptorFilterGlob(final String glob) {
-		
+
 		this.functionDescriptorFilter = new FunctionDescriptorFilterGlob(glob);
 		return this;
 	}
-	
+
 	/** @param mapper
 	 *            - function(entry, name)
 	 * @return */
 	public SettingsBuilder setDescriptorMapper(final BaseFunction mapper) {
-		
+
 		this.functionDescriptorMapper = mapper;
 		return this;
 	}
-	
+
 	/** @param reducer
 	 *            - function(settings, description)
 	 * @return */
 	public SettingsBuilder setDescriptorReducer(final BaseFunction reducer) {
-		
+
 		this.functionDescriptorReducer = reducer;
 		return this;
 	}
-	
+
 	/** Sets to read settings from file.
 	 *
 	 * Settings are either single-file or folder: setInputFileXXX and setInputFolderXXX are mutualy
@@ -197,14 +197,14 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 	 *            - settings file
 	 * @return */
 	public SettingsBuilder setInputFile(final Entry inputFile) {
-		
+
 		if (this.inputFolder != null) {
 			throw new IllegalStateException("InputFolder is already set!");
 		}
 		this.inputFile = inputFile;
 		return this;
 	}
-	
+
 	/** Sets to read settings from file (by file path).
 	 *
 	 * Settings are either single-file or folder: setInputFileXXX and setInputFolderXXX are mutualy
@@ -214,7 +214,7 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 	 *            relative paths root in /union
 	 * @return */
 	public SettingsBuilder setInputFilePath(final String path) {
-		
+
 		if (this.inputFolder != null) {
 			throw new IllegalStateException("InputFolder is already set!");
 		}
@@ -225,7 +225,7 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 		);
 		return this;
 	}
-	
+
 	/** Sets to read settings descriptors from folder.
 	 *
 	 * Settings are either single-file or folder: setInputFileXXX and setInputFolderXXX are mutualy
@@ -234,14 +234,14 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 	 * @param inputFolder
 	 * @return */
 	public SettingsBuilder setInputFolder(final Entry inputFolder) {
-		
+
 		if (this.inputFile != null) {
 			throw new IllegalStateException("InputFile is already set!");
 		}
 		this.inputFolder = inputFolder;
 		return this;
 	}
-	
+
 	/** Sets to read settings descriptors from folder (by folder path).
 	 *
 	 * Settings are either single-file or folder: setInputFileXXX and setInputFolderXXX are mutualy
@@ -251,7 +251,7 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 	 *            relative paths root in /union
 	 * @return */
 	public SettingsBuilder setInputFolderPath(final String path) {
-		
+
 		if (this.inputFile != null) {
 			throw new IllegalStateException("InputFile is already set!");
 		}
@@ -265,7 +265,7 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 		);
 		return this;
 	}
-	
+
 	/** Sets to read settings descriptors from folder (by folder path).
 	 *
 	 * Settings are either single-file or folder: setInputFileXXX and setInputFolderXXX are mutualy
@@ -275,7 +275,7 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 	 *            multiple paths relative paths root in /union
 	 * @return */
 	public SettingsBuilder setInputFolderPaths(final String[] path) {
-		
+
 		if (null == path) {
 			throw new NullPointerException("argument is null!");
 		}
@@ -294,20 +294,20 @@ public class SettingsBuilder implements BaseSupplier<BaseObject> {
 					path[i]//
 			);
 		}
-		
+
 		this.inputFolder = Storage.createRoot(new StorageImplUnion(stack));
 		return this;
 	}
-	
+
 	/** Sets the optional mapper function to apply to final settings loaded.
 	 *
 	 * @param mapper
 	 *            - function(current, previous)
 	 * @return */
 	public SettingsBuilder setResultMapper(final BaseFunction mapper) {
-		
+
 		this.functionResultMapper = mapper;
 		return this;
 	}
-	
+
 }
