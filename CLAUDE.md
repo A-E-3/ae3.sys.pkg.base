@@ -1,0 +1,25 @@
+# CLAUDE.md — ae3.sys.pkg.base
+
+Base package providing shared AE3 utilities, including the "Settings" caching mechanism used across the system.
+
+## The Settings mechanism has a Java layer and a JS layer
+
+- `java/ru/myx/ae3/util/concurrent/BaseSupplierCachedLazy.java` — the generic primitive: a lazy, thread-safe, periodically-refreshed holder for any `T extends BaseObject`. `functionValueSource` is a `BaseFunction(previousValue) -> newValue`, called at most every `cacheTimeoutRefresh` (default 5s); `cacheTimeoutExpire` (default 30s) decides whether callers block for a fresh value during refresh or get a stale one. It does not itself check whether a source file changed — that's the value-source function's job.
+- `java/ru/myx/ae3/util/settings/SettingsBuilder.java` — a convenience wrapper around `BaseSupplierCachedLazy` for the common case of settings-from-files. `parserForInput()` only supports `.json` and `.xml` input files (via `setInputFile`) or a folder of descriptors (via `setInputFolder`/`setDescriptorFilterGlob` etc.) — other file types throw `IllegalArgumentException`.
+- `ae3-packages/ae3.base/resources/lib/ae3.util/Settings.js` — the JS-facing surface (`require("ae3/vfs")`-based), oriented around **folders of `*.json` descriptors**: `getSettingsByDescriptors(path, callback)` builds a checksum from each file's `binaryContentLength + ":" + lastModified`, and only re-parses when that checksum changes (cache TTL ~6s, with a staggered async background refresh once the cached value is >4s old). This module is what "Settings" usually refers to when used from AE3 scripts; it also re-exports `SettingsBuilder` as `require("java.class/ru.myx.ae3.util.settings.SettingsBuilder")` for JS callers that want the Java builder directly.
+
+## For a single cached file → object, not folder-of-descriptors: `ru.myx.ae3.util.fn`
+
+Neither `SettingsBuilder` nor `Settings.js` fits a *single* non-JSON/XML file. The actual reusable idiom for that is `java/ru/myx/ae3/util/fn/`:
+
+- `SupplierTextInputAbstractTextCached` — abstract base, `get()` is `final`. Re-checks at most every 2500ms (`Engine.fastTime()`); only re-parses when the freshly-loaded source text differs from `this.lastSource` (plain content-string equality — no separate mtime/checksum tracking). Subclasses implement `loadSource()` and `parseText(CharSequence)`.
+- `SupplierVfsFileAbstractTextParseCached` — fixes `loadSource()` to `this.file.getTextContent().baseValue()` for a constructor-supplied `Entry`. Still abstract on `parseText`.
+- `SupplierVfsFileXmlToMapCached` / `SupplierVfsFileJsonToMapCached` — concrete siblings; each takes an `Entry` in its constructor and implements `parseText(CharSequence)` to produce the real `BaseObject` result (optionally merged over `inputDefaults`).
+
+This is the pattern to extend for any new "single VFS file, parsed/compiled and cached" need (e.g. compiling an XSLT `Templates` — see `ae3.sdk`'s CLAUDE.md) — add a new sibling class here, not a hand-rolled `BaseSupplierCachedLazy` and not `SettingsBuilder`.
+
+Note: as of this writing, nothing outside `ae3.sys.pkg.base` imports any of `ru.myx.ae3.util.fn`/`ru.myx.ae3.util.concurrent`/`ru.myx.ae3.util.settings` in Java (verified: no cross-unit `import ru.myx.ae3.util....` hits anywhere else in the source tree), and this unit's `project.inf` has no `export-classpath:java` line (unlike `ae3.sdk`, which does). Confirmed directly by the maintainer that it's importable cross-unit regardless (`Requires: ae3.base` is sufficient) — it just hasn't been done before now. First real cross-unit consumer: `ae3.sys.pkg.i3.web`'s `WebContextXml`, via a new sibling class `SupplierVfsFileXslTemplatesCached` (see this unit's `java/ru/myx/ae3/util/fn/`).
+
+## Gotcha: SupplierTextInputAbstractTextCached has no locking — this is deliberate, not a bug
+
+`get()` reads/writes `lastDate`/`lastSource`/`lastResult` with no `synchronized` and no `volatile`. Under concurrent load, multiple threads can simultaneously see a stale cache (past the 2500ms check) and all call `loadSource()` again; each only pays for an actual `parseText()` recompute if the freshly-loaded text differs from last time (content-string equality) — so redundant *reads* are possible under load, but redundant *recomputation* only happens when the source genuinely changed. For a rarely-changing source (a stylesheet, a settings file), this is a reasonable lock-free tradeoff: occasional cheap redundant re-reads instead of any contention on the hot path. Don't "fix" this with synchronization without checking whether that's actually wanted — it looks like an intentional choice for a high-load system, not an oversight.
