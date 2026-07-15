@@ -29,12 +29,15 @@ public class BaseMapQueueEx implements MapQueue {
 	}
 
 	public BaseObject putCheckEnqueue(final BaseObject key, final BaseObject value) {
-		
+
 		final int racyLength = this.map.size();
 		if (racyLength >= this.capacity) {
 			return BaseObject.UNDEFINED;
 		}
-		return this.map.computeIfAbsent(key, this.mapper);
+		final BaseObject previous = this.map.putIfAbsent(key, value);
+		return previous != null
+			? previous
+			: value;
 	}
 
 	public BaseObject removeIfQueued(final BaseObject key) {

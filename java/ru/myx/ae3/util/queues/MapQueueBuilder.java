@@ -112,22 +112,6 @@ public class MapQueueBuilder implements BaseSupplier<BaseObject> {
 		}
 	}
 	
-	/** @param mapper
-	 * @return */
-	public MapQueueBuilder setActiveTaskChecker(final BaseFunction mapper) {
-		
-		this.functionTaskChecker = mapper;
-		return this;
-	}
-
-	/** @param seconds
-	 * @return */
-	public MapQueueBuilder setActiveTaskCheckerIntervalSeconds(final int seconds) {
-		
-		this.functionTaskChecker = mapper;
-		return this;
-	}
-	
 	/** @return */
 	public MapQueueBuilder setCachedLazy() {
 		
@@ -151,11 +135,6 @@ public class MapQueueBuilder implements BaseSupplier<BaseObject> {
 		
 		this.functionDescriptorReducer = reducer;
 		return this;
-	}
-	
-	public MapQueueBuilder setFinishedPurgeDelayDays(final int count) {
-		
-		//
 	}
 	
 	/** @param inputFile
@@ -203,26 +182,6 @@ public class MapQueueBuilder implements BaseSupplier<BaseObject> {
 		return this;
 	}
 
-	public MapQueueBuilder setMaxFinished(final int count) {
-
-		//
-	}
-	
-	public MapQueueBuilder setMaxPending(final int count) {
-
-		//
-	}
-	
-	public MapQueueBuilder setMaxWorking(final int count) {
-
-		//
-	}
-	
-	public MapQueueBuilder setParallelChecking(final boolean v) {
-
-		//
-	}
-	
 	/** @param mapper
 	 * @return */
 	public MapQueueBuilder setResultMapper(final BaseFunction mapper) {
