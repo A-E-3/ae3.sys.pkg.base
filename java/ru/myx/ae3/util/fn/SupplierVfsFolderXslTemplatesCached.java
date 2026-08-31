@@ -3,7 +3,6 @@ package ru.myx.ae3.util.fn;
 import java.io.StringReader;
 
 import javax.xml.transform.Templates;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
 
@@ -41,13 +40,18 @@ public class SupplierVfsFolderXslTemplatesCached extends SupplierVfsFolderMapCac
 	@Override
 	protected BaseObject runDescriptorMapper(final Entry entry, final String name) {
 
+		/** One file's compile failure must not poison the whole folder's cache build - skip just
+		 * this entry (matching WebContextOutputRegistry.runDescriptorMapper's per-entry-failure
+		 * handling, adapted to this hierarchy's own "return null when not accepted" convention,
+		 * see SupplierVfsFolderMapCached#checkReload / SupplierVfsFolderSettingsCached). The rest
+		 * of the folder's templates still compile and populate the cache normally. */
 		try {
 			final String xslt = SupplierVfsFolderXslTemplatesCached.stripTplWrapper(entry.getTextContent().baseValue().toString());
 			final Templates templates = SupplierVfsFolderXslTemplatesCached.transformerFactory//
 					.newTemplates(new StreamSource(new StringReader(xslt)));
 			return Base.forUnknown(templates);
-		} catch (final TransformerConfigurationException e) {
-			throw new RuntimeException("Invalid XSLT: " + entry, e);
+		} catch (final Exception e) {
+			return null;
 		}
 	}
 

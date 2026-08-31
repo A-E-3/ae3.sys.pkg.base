@@ -112,13 +112,19 @@ public class SupplierVfsFolderSettingsCached extends SupplierVfsFolderMapCached 
 			describe : {
 				final BaseObject parsed;
 				parse : {
+					/** One file's parse failure must not poison the whole folder's cache build -
+					 * skip just this entry (matching WebContextOutputRegistry.runDescriptorMapper's
+					 * per-entry-failure handling, adapted to this class's own "return null when
+					 * not accepted" convention, same as the branch below for an unrecognized
+					 * extension). The rest of the folder's descriptors still parse and populate
+					 * the cache normally. */
 					final String key = entry.getKey().toLowerCase();
 					if (key.endsWith(".json")) {
 						try {
 							parsed = JsonSAPI.parse(Exec.currentProcess(), entry);
 							break parse;
 						} catch (final Exception e) {
-							throw new RuntimeException("Invalid JSON: " + entry, e);
+							return null;
 						}
 					}
 					if (key.endsWith(".xml")) {
@@ -132,7 +138,7 @@ public class SupplierVfsFolderSettingsCached extends SupplierVfsFolderMapCached 
 							);
 							break parse;
 						} catch (final Exception e) {
-							throw new RuntimeException("Invalid XML: " + entry, e);
+							return null;
 						}
 					}
 					return null;
