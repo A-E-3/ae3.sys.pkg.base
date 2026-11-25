@@ -59,7 +59,7 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 	 */
 	@ReflectionExplicit
 	public static final String KEY_LOWEST //
-			= "00000000z0000-00";
+			= "000000000z000---";
 	
 	/**
 	 *
@@ -82,7 +82,7 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 	
 	private static long lastDateMillis = -1;
 	
-	private static short lastSequence = -1;
+	private static int lastSequence = -1;
 	
 	/** @param a
 	 * @param b
@@ -194,13 +194,22 @@ public class EventIdentifier implements BaseObjectNoOwnProperties, Value<BaseDat
 	@ReflectionExplicit
 	public static final EventIdentifier next(final short origin) {
 		
-		final long dateMillis = System.currentTimeMillis();
-		final short sequence;
+		final long clockMillis = System.currentTimeMillis();
+		final long dateMillis;
+		final int sequence;
 		synchronized (EventIdentifier.class) {
-			if (dateMillis <= EventIdentifier.lastDateMillis) {
-				sequence = ++EventIdentifier.lastSequence;
+			if (clockMillis <= EventIdentifier.lastDateMillis) {
+				if (EventIdentifier.lastSequence >= EventIdentifier.MAX_SEQUENCE) {
+					/** this millisecond's sequences are spent, roll to the next one */
+					EventIdentifier.lastDateMillis++;
+					EventIdentifier.lastSequence = sequence = 0;
+				} else {
+					EventIdentifier.lastSequence = sequence = EventIdentifier.lastSequence + 1;
+				}
+				/** the stored millisecond, never the clock's, so a duplicate timestamp stays ordered */
+				dateMillis = EventIdentifier.lastDateMillis;
 			} else {
-				EventIdentifier.lastDateMillis = dateMillis;
+				EventIdentifier.lastDateMillis = dateMillis = clockMillis;
 				EventIdentifier.lastSequence = sequence = 0;
 			}
 		}
